@@ -173,5 +173,66 @@ class FunList<T> {
     forEach(item -> sb.append(item).append(" "));
     return sb.toString();
   }
-}
 
+  //Implementations for Exercise 4.1
+  public FunList<T> remove(T x) {
+  	return new FunList<T>(remove(x, this.first));
+  }
+
+  protected static <T> Node<T> remove(T x, Node<T> xs) {
+  	if (xs == null)
+  		return null;
+  	else {
+  		if (xs.item == x) {
+  			return remove(x, xs.next);
+  		}
+  		return new Node<T>(xs.item, remove(x, xs.next));
+  	}
+  }
+
+  public int count(Predicate<T> p) {
+      return count(p, 0, this.first);
+  }
+
+  protected static <T> Integer count(Predicate<T> p, int total, Node<T> xs) {
+      if (xs == null) {
+          return total;
+      }
+      if (p.test(xs.item))
+          total++;
+      return count(p, total, xs.next);
+  }
+
+  public FunList<T> filter(Predicate<T> p) {
+      return new FunList<>(filter(p, this.first));
+  }
+
+  protected static <T> Node<T> filter(Predicate<T> p, Node<T> xs) {
+      if (xs == null) {
+          return null;
+      }
+      if (p.test(xs.item))
+          return new Node<T>(xs.item, filter(p, xs.next));
+      return filter(p, xs.next); //This one should pass
+  }
+
+  public FunList<T> removeFun(T x) {
+      throw new NotImplementedException();
+  }
+
+  public FunList<T> flatten(FunList<FunList<T>> xxs) {
+      throw new NotImplementedException();
+  }
+
+  public FunList<T> flattenFun(FunList<FunList<T>> xxs) {
+      throw new NotImplementedException();
+  }
+
+  public <U> FunList<U> flatmap(Function<T, FunList<U>> f) {
+      throw new NotImplementedException();
+  }
+
+  public FunList<T> scan(BinaryOperator<T> f) {
+      throw new NotImplementedException();
+  }
+}
