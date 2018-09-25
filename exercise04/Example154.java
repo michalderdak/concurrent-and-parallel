@@ -217,15 +217,23 @@ class FunList<T> {
   }
 
   public FunList<T> removeFun(T x) {
-      throw new NotImplementedException();
+      return this.filter((item) -> item != x);
   }
 
-  public FunList<T> flatten(FunList<FunList<T>> xxs) {
-      throw new NotImplementedException();
+  protected static <T> FunList<T> flatten(FunList<FunList<T>> xss) {
+      FunList<T> newList = new FunList<T>(); //The single list to return
+      Node<FunList<T>> dummy = xss.first;
+      //Need to go through the list of lists, then append each one to the newList.
+      while (dummy != null) {
+          newList = newList.append(dummy.item);
+          dummy = dummy.next;
+      }
+      return newList;
   }
 
-  public FunList<T> flattenFun(FunList<FunList<T>> xxs) {
-      throw new NotImplementedException();
+  protected static <T> FunList<T> flattenFun(FunList<FunList<T>> xss) {
+      FunList<T> newList = new FunList<T>(); //The single list to return
+      return xss.reduce(newList, (FunList<T> list1, FunList<T> list2)-> list1.append(list2));
   }
 
   public <U> FunList<U> flatmap(Function<T, FunList<U>> f) {
