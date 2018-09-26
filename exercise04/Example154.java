@@ -237,7 +237,19 @@ class FunList<T> {
   }
 
   public <U> FunList<U> flatmap(Function<T, FunList<U>> f) {
-      throw new NotImplementedException();
+      FunList<U> newFlattenedList = new FunList<U>();
+      Node<T> node = this.first;
+      while(node != null)
+      {
+          FunList<U> computedList = f.apply(node.item);
+          newFlattenedList = newFlattenedList.append(computedList);
+          node = node.next;
+      }
+      return newFlattenedList;
+  }
+
+  public <U> FunList<U> flatmapFun(Function<T, FunList<U>> f) {
+      return flatten(this.map(f));
   }
 
   public FunList<T> scan(BinaryOperator<T> f) {
