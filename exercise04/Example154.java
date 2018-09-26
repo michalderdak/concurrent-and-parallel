@@ -173,5 +173,94 @@ class FunList<T> {
     forEach(item -> sb.append(item).append(" "));
     return sb.toString();
   }
-}
 
+  //Implementations for Exercise 4.1
+  public FunList<T> remove(T x) {
+  	return new FunList<T>(remove(x, this.first));
+  }
+
+  protected static <T> Node<T> remove(T x, Node<T> xs) {
+  	if (xs == null)
+  		return null;
+  	else {
+  		if (xs.item == x) {
+  			return remove(x, xs.next);
+  		}
+  		return new Node<T>(xs.item, remove(x, xs.next));
+  	}
+  }
+
+  public int count(Predicate<T> p) {
+      return count(p, 0, this.first);
+  }
+
+  protected static <T> Integer count(Predicate<T> p, int total, Node<T> xs) {
+      if (xs == null) {
+          return total;
+      }
+      if (p.test(xs.item))
+          total++;
+      return count(p, total, xs.next);
+  }
+
+  public FunList<T> filter(Predicate<T> p) {
+      return new FunList<>(filter(p, this.first));
+  }
+
+  protected static <T> Node<T> filter(Predicate<T> p, Node<T> xs) {
+      if (xs == null) {
+          return null;
+      }
+      if (p.test(xs.item))
+          return new Node<T>(xs.item, filter(p, xs.next));
+      return filter(p, xs.next); //This one should pass
+  }
+
+  public FunList<T> removeFun(T x) {
+      return this.filter((item) -> item != x);
+  }
+
+  protected static <T> FunList<T> flatten(FunList<FunList<T>> xss) {
+      FunList<T> newList = new FunList<T>(); //The single list to return
+      Node<FunList<T>> dummy = xss.first;
+      //Need to go through the list of lists, then append each one to the newList.
+      while (dummy != null) {
+          newList = newList.append(dummy.item);
+          dummy = dummy.next;
+      }
+      return newList;
+  }
+
+  protected static <T> FunList<T> flattenFun(FunList<FunList<T>> xss) {
+      FunList<T> newList = new FunList<T>(); //The single list to return
+      return xss.reduce(newList, (FunList<T> list1, FunList<T> list2)-> list1.append(list2));
+  }
+
+  public <U> FunList<U> flatmap(Function<T, FunList<U>> f) {
+      FunList<U> newFlattenedList = new FunList<U>();
+      Node<T> node = this.first;
+      while(node != null)
+      {
+          FunList<U> computedList = f.apply(node.item);
+          newFlattenedList = newFlattenedList.append(computedList);
+          node = node.next;
+      }
+      return newFlattenedList;
+  }
+
+  public <U> FunList<U> flatmapFun(Function<T, FunList<U>> f) {
+      return flatten(this.map(f));
+  }
+
+  public FunList<T> scan(BinaryOperator<T> f) {
+      FunList<T> newList = new FunList<T>();
+      Node<T> node = this.first;
+      newList = newList.insert(0, node.item);
+      while (node.next != null) {
+          T result = f.apply(node.item, node.next.item);
+          newList = newList.insert(0, result);
+          node = node.next;
+      }
+      return newList.reverse();
+  }
+}
