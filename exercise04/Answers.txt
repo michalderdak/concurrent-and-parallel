@@ -1,0 +1,4 @@
+6. Make a parallel version of the palindrome-printing stream pipeline. It is possible to observe whether it is faster or slower than the sequential one?
+Paralles is few ms faster, no significant difference
+12. Try to make a parallel version of the anagram-printing stream pipeline. Is it faster or slower than the sequential one?
+Slower - sequential = 13 000 ms, parallel = 14 000 ms +-
