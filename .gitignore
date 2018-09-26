@@ -21,3 +21,10 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/.vscode/launch.json
+/.vscode
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
+/.vs/concurrent-and-parallel/v15/.suo
+/.vs/concurrent-and-parallel/v15
+/.vs
