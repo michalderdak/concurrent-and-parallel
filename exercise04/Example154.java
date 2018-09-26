@@ -253,6 +253,14 @@ class FunList<T> {
   }
 
   public FunList<T> scan(BinaryOperator<T> f) {
-      throw new NotImplementedException();
+      FunList<T> newList = new FunList<T>();
+      Node<T> node = this.first;
+      newList = newList.insert(0, node.item);
+      while (node.next != null) {
+          T result = f.apply(node.item, node.next.item);
+          newList = newList.insert(0, result);
+          node = node.next;
+      }
+      return newList.reverse();
   }
 }
