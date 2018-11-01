@@ -1,0 +1,57 @@
+1.
+
+We have decided to create an instance of DownloadWorker for each url. For each
+DownloadWorker we pass an url it should look up and download content from.
+This way we ensure that each of the urls will be downloaded concurrently.
+
+List<DownloadWorker> downloadWorkers = new ArrayList<DownloadWorker>();
+for (String url : urls) {
+    downloadWorkers.add(new DownloadWorker(url, textArea));
+}
+
+Later on in the code we have iterate through list of downloadWorkers and add
+the execute() function  to the button listeners, for executing the workers on 
+fetch button click.
+
+for (DownloadWorker worker : downloadWorkers) {
+      fetchButton.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          worker.execute();
+        }});
+    .
+    .
+    .
+}
+
+2.
+
+For cancellation of the fetching on all of the workers, we have used the downloadWorkers list 
+mentioned in the previous exercise. Again we iterate through the list of downloadWorkers 
+where we (again) set on button click listener to perform a SwingWorker's base function
+called cancel, to cancel the execution of the worker
+
+for (DownloadWorker worker : downloadWorkers) {
+     .
+     .
+     .
+
+      cancelButton.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          worker.cancel(false);
+      }});
+
+      .
+      .
+      .
+}
+
+3.
+
+For the progress bar we have implemented an AtomicInteger private field:
+
+private static AtomicInteger atomicProgress = new AtomicInteger();
+
+We increment the atomicProgress and set the progress bar accordingly with 
+setProgress function
+
+setProgress((100 * atomicProgress.incrementAndGet()) / urls.length);
