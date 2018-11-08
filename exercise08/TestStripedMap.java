@@ -18,7 +18,15 @@ import java.util.function.IntToDoubleFunction;
 
 public class TestStripedMap {
     public static void main(String[] args) {
-        testMapConcurrently(new StripedWriteMap<Integer, String>(77, 7), 16);
+        while (true)
+        {
+            testMapConcurrently(new StripedWriteMap<Integer, String>(77, 7), 16);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static void timeAllMaps() {
@@ -127,6 +135,7 @@ public class TestStripedMap {
                 try {
                     final int tNumber = threadNumber.getAndIncrement();
                     barrier.await();
+                    System.out.println("Thread:" + tNumber + " starting work.");
                     for (int j = 0; j < 10; j++) {
                         int putKey = random.nextInt(99);
                         int putIfAbsentKey = random.nextInt(99);
@@ -166,23 +175,25 @@ public class TestStripedMap {
         try {
             barrier.await(); //Waits for everyone to start.
             barrier.await(); //Waits for everyone to finish.
-            for (int i = 0; i < nrOfThreads; i++) {
-                threads[i].join();
-            }
+
             AtomicInteger mapSum = new AtomicInteger();
+            AtomicInteger entryCount = new AtomicInteger();
             AtomicIntegerArray countsFromMap = new AtomicIntegerArray(nrOfThreads);
             map.forEach((k, v) ->
             {
                 mapSum.addAndGet(k);
                 countsFromMap.incrementAndGet(Integer.parseInt(v.split(":")[0]));
+                entryCount.incrementAndGet();
             });
 
             assert mapSum.get() == putSum.get();
+            assert entryCount.get() == map.size();
             for (int i = 0; i < nrOfThreads; i++)
             {
                 assert countsFromMap.get(i) == counts.get(i);
             }
             System.out.println("DONE");
+
 
         } catch (InterruptedException e) {
             e.printStackTrace();
