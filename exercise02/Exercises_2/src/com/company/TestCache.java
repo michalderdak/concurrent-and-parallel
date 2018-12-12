@@ -4,32 +4,73 @@ package com.company;// For week 2
 // Modifications by sestoft@itu.dk * 2014-09-08
 
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.*;
 import java.util.function.Function;
 
-
 public class TestCache {
     public static void main(String[] args) throws InterruptedException {
-        Computable<Long, long[]> factorizer = new Factorizer(),
-                cachingFactorizer = new Memoizer1<Long, long[]>(factorizer);
-        // cachingFactorizer = factorizer;
+        long time = System.currentTimeMillis();
 
-        long p = 71827636563813227L;
+        Computable<Long, long[]> f = new Factorizer();
 
-        print(factorizer.compute(p));
+        //exerciseFactorizer(f);
+        //exerciseFactorizer(new Memoizer1<Long, long[]>(f));
+        //exerciseFactorizer(new Memoizer2<Long, long[]>(f));
+        //exerciseFactorizer(new Memoizer3<Long, long[]>(f));
+        //exerciseFactorizer(new Memoizer4<Long, long[]>(f));
+        //exerciseFactorizer(new Memoizer5<Long, long[]>(f));
+        exerciseFactorizer(new Memoizer0<Long, long[]>(f));
 
-        long[] factors = cachingFactorizer.compute(p);
-        print(factors);
+        System.out.println(((Factorizer) f).getCount());
 
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
-        print(cachingFactorizer.compute(p));
+        long timeTaken = System.currentTimeMillis() - time;
+        System.out.println("Time" + timeTaken + " ms.");
+    }
+
+    private static void exerciseFactorizer(Computable<Long, long[]> f) {
+        final int threadCount = 16;
+        final long start = 10_000_000_000L, range = 20_000L;
+        System.out.println(f.getClass());
+        startThreads(threadCount, start, range, f);
+    }
+
+    private static void startThreads(int threadCount, long start, long range, Computable<Long, long[]> f) {
+        Thread[] threads = new Thread[threadCount];
+        for (int threadNr = 0; threadNr < threads.length; threadNr++) {
+            final long from1 = start;
+            final long to1 = start + range;
+
+            final long from2 = start + range + ((threadNr * range) / 4);
+            final long to2 = from2 + range;
+
+            threads[threadNr] = new Thread(() -> {
+                for (long i = from1; i < to1; i++) {
+                    try {
+                        f.compute(i);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                for (long i = from2; i < to2; i++) {
+                    try {
+                        f.compute(i);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            threads[threadNr].start();
+        }
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static void print(long[] arr) {
@@ -76,6 +117,36 @@ class Factorizer implements Computable<Long, long[]> {
     }
 }
 
+class Memoizer0<A, V> implements Computable<A, V> {
+    private final Map<A, V> cache = new ConcurrentHashMap<A, V>();
+    private final Computable<A, V> c;
+
+    public Memoizer0(Computable<A, V> c) {
+        this.c = c;
+    }
+
+    public V compute(final A arg) throws InterruptedException {
+        V result = cache.computeIfAbsent(arg, a -> {
+            try {
+                return c.compute(a);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });
+        return result;
+    }
+
+
+    public static RuntimeException launderThrowable(Throwable t) {
+        if (t instanceof RuntimeException)
+            return (RuntimeException) t;
+        else if (t instanceof Error)
+            throw (Error) t;
+        else
+            throw new IllegalStateException("Not unchecked", t);
+    }
+}
 
 /**
  * Initial cache attempt using HashMap and synchronization;
@@ -241,14 +312,10 @@ class Memoizer5<A, V> implements Computable<A, V> {
 
     public V compute(final A arg) throws InterruptedException {
         // AtomicReference is used as a simple assignable holder; no atomicity needed
-        final AtomicReference<FutureTask<V>> ftr = new AtomicReference<FutureTask<V>>();
+        final AtomicReference<FutureTask<V>> ftr = new AtomicReference<>();
         Future<V> f = cache.computeIfAbsent(arg, (A argv) -> {
-            Callable<V> eval = new Callable<V>() {
-                public V call() throws InterruptedException {
-                    return c.compute(argv);
-                }
-            };
-            ftr.set(new FutureTask<V>(eval));
+            Callable<V> eval = () -> c.compute(argv);
+            ftr.set(new FutureTask<>(eval));
             return ftr.get();
         });
         // Important to run() the future outside the computeIfAbsent():
